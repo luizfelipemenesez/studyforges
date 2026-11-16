@@ -1,0 +1,192 @@
+
+<!--
+Arquivo: app/templates/index.html
+Papel no sistema: Tela inicial (Dashboard).
+Layout assimétrico de 2 colunas no desktop:
+  - Coluna esquerda (65%): Editor de anotações, upload de arquivo e configurações do simulado.
+  - Coluna direita (35%): Biblioteca de cadernos salvos no SQLite.
+Comunica-se com: app/templates/base.html e app/static/js/dashboard.js
+-->
+{% extends "base.html" %}
+
+{% block title %}StudyForge — Novo Caderno de Estudo{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+    <!-- ===================================================================== -->
+    <!-- COLUNA ESQUERDA (7 de 12 colunas): Entrada de Anotações e Criação     -->
+    <!-- ===================================================================== -->
+    <section class="lg:col-span-7 bg-white border border-slate-200 rounded-lg p-6 shadow-xs">
+        <div class="border-b border-slate-100 pb-4 mb-5">
+            <h1 class="text-xl font-semibold text-slate-900 tracking-tight">
+                Novo Caderno de Estudo
+            </h1>
+            <p class="text-sm text-slate-600 mt-1">
+                Cole suas anotações ou envie um documento. O sistema identifica o tema, consulta referências externas e monta um simulado comentado.
+            </p>
+        </div>
+
+        <!-- Botões discretos de exemplos prontos para teste imediato -->
+        <div class="mb-4">
+            <span class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                Carregar anotação de exemplo
+            </span>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" data-exemplo="firewall"
+                    class="btn-exemplo text-xs font-medium px-3 py-1.5 rounded border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors">
+                    Redes e Firewall
+                </button>
+                <button type="button" data-exemplo="rest"
+                    class="btn-exemplo text-xs font-medium px-3 py-1.5 rounded border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors">
+                    APIs REST e HTTP
+                </button>
+                <button type="button" data-exemplo="direito"
+                    class="btn-exemplo text-xs font-medium px-3 py-1.5 rounded border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors">
+                    Direito Administrativo
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulário principal -->
+        <form id="form-novo-caderno" class="space-y-5">
+            <!-- Campo de texto para anotações -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="texto-anotacao" class="text-sm font-medium text-slate-800">
+                        Suas anotações
+                    </label>
+                    <button type="button" id="btn-limpar-texto" class="text-xs text-slate-500 hover:text-slate-800">
+                        Limpar campo
+                    </button>
+                </div>
+                <textarea
+                    id="texto-anotacao"
+                    name="texto_anotacao"
+                    rows="10"
+                    placeholder="Cole aqui o resumo da sua aula, guia técnico, tópicos de estudo ou trechos de apostila..."
+                    class="w-full rounded-md border border-slate-300 bg-[#FAF9F6] px-3.5 py-3 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700 leading-relaxed"
+                ></textarea>
+            </div>
+
+            <!-- Upload opcional de arquivo -->
+            <div class="bg-slate-50 border border-dashed border-slate-300 rounded-md p-3.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <label for="input-arquivo" class="text-sm font-medium text-slate-800 cursor-pointer hover:text-blue-700">
+                            Anexar arquivo (.txt, .md ou .pdf)
+                        </label>
+                        <p id="nome-arquivo-selecionado" class="text-xs text-slate-500 mt-0.5">
+                            Opcional. O texto extraído será somado às anotações acima.
+                        </p>
+                    </div>
+                    <input
+                        type="file"
+                        id="input-arquivo"
+                        name="arquivo"
+                        accept=".txt,.md,.pdf"
+                        class="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border file:border-slate-300 file:text-xs file:font-medium file:bg-white file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
+                    >
+                </div>
+            </div>
+
+            <!-- Configurações do simulado -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                    <label for="select-quantidade" class="block text-xs font-medium text-slate-700 mb-1">
+                        Quantidade de questões
+                    </label>
+                    <select id="select-quantidade" name="quantidade"
+                        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-700 focus:outline-none">
+                        <option value="5" selected>5 questões (Revisão rápida)</option>
+                        <option value="10">10 questões (Simulado padrão)</option>
+                        <option value="15">15 questões (Aprofundamento)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="select-dificuldade" class="block text-xs font-medium text-slate-700 mb-1">
+                        Nível de dificuldade
+                    </label>
+                    <select id="select-dificuldade" name="dificuldade"
+                        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-700 focus:outline-none">
+                        <option value="Misto" selected>Misto (Progressivo)</option>
+                        <option value="Iniciante">Iniciante (Conceitual)</option>
+                        <option value="Intermediário">Intermediário (Aplicação)</option>
+                        <option value="Avançado">Avançado (Troubleshooting / Casos)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Opção de pesquisa externa -->
+            <div class="flex items-start gap-2.5 pt-1">
+                <input type="checkbox" id="check-busca-web" name="usar_busca_web" checked
+                    class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-700">
+                <label for="check-busca-web" class="text-sm text-slate-700 leading-snug">
+                    <span class="font-medium text-slate-900">Consultar referências externas na web</span>
+                    <span class="block text-xs text-slate-500">
+                        Busca boas práticas, exceções e casos reais na internet para enriquecer as questões e explicações.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Caixa de alerta para erros -->
+            <div id="alerta-erro" class="hidden rounded-md bg-rose-50 border border-rose-200 p-3.5 text-sm text-rose-800"></div>
+
+            <!-- Indicador de progresso durante a geração -->
+            <div id="status-geracao" class="hidden rounded-md bg-slate-50 border border-slate-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="spinner-editorial"></div>
+                    <div>
+                        <p id="texto-status-etapa" class="text-sm font-medium text-slate-900">
+                            Analisando estrutura das anotações...
+                        </p>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Isso costuma levar entre 8 e 15 segundos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão de envio -->
+            <div class="pt-2">
+                <button type="submit" id="btn-gerar-simulado"
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-md bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Gerar Simulado
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- COLUNA DIREITA (5 de 12 colunas): Biblioteca de Cadernos Salvos       -->
+    <!-- ===================================================================== -->
+    <aside class="lg:col-span-5 bg-white border border-slate-200 rounded-lg p-6 shadow-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">
+                    Biblioteca de Cadernos
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Histórico salvo localmente no SQLite
+                </p>
+            </div>
+            <span id="contador-cadernos" class="font-mono text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                0
+            </span>
+        </div>
+
+        <!-- Lista preenchida dinamicamente pelo dashboard.js -->
+        <div id="lista-cadernos" class="space-y-3">
+            <p class="text-sm text-slate-500 py-6 text-center">
+                Carregando cadernos...
+            </p>
+        </div>
+    </aside>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

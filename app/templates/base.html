@@ -1,0 +1,83 @@
+
+<!--
+Arquivo: app/templates/base.html
+Papel no sistema: Template HTML mestre (layout base) herdado por todas as páginas.
+Carrega as fontes Inter e JetBrains Mono, o TailwindCSS e a barra superior limpa.
+Comunica-se com: index.html, quiz.html e app/static/css/custom.css
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StudyForge — Cadernos de Estudo Ativo{% endblock %}</title>
+
+    <!-- Importação das fontes editoriais Inter (interface) e JetBrains Mono (código/tags) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- TailwindCSS via CDN para estilização rápida sem precisar compilar arquivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Configuração personalizada das fontes no Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Estilos CSS complementares do projeto -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="bg-[#FAF9F6] text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Cabeçalho editorial minimalista -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+            <!-- Identidade sóbria da aplicação -->
+            <a href="/" class="flex items-center gap-2.5 text-slate-900 hover:text-blue-700 transition-colors">
+                <span class="w-7 h-7 rounded bg-blue-700 text-white font-mono text-xs font-semibold flex items-center justify-center">
+                    SF
+                </span>
+                <span class="font-semibold tracking-tight text-base">StudyForge</span>
+            </a>
+
+            <!-- Navegação direita -->
+            <nav class="flex items-center gap-4 text-sm">
+                <a href="/" class="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                    Cadernos
+                </a>
+                <span class="text-slate-300">|</span>
+                <span class="font-mono text-xs text-slate-500">v1.0</span>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Área principal onde cada página filha injeta seu conteúdo -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Rodapé discreto -->
+    <footer class="border-t border-slate-200 bg-white py-4 mt-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <span>StudyForge — Ambiente de Revisão e Simulados</span>
+            <span class="font-mono">SQLite Local &middot; Exportação Markdown</span>
+        </div>
+    </footer>
+
+    <!-- Cliente central de comunicação com a API (usado em todas as páginas) -->
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
+    <!-- Bloco reservado para scripts específicos de cada página -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

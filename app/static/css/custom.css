@@ -1,0 +1,41 @@
+
+/*
+Arquivo: app/static/css/custom.css
+Papel no sistema: Complementa o TailwindCSS com detalhes de tipografia editorial,
+barra de rolagem discreta e indicador de carregamento minimalista.
+Comunica-se com: app/templates/base.html
+*/
+
+/* Suaviza a renderização das fontes em diferentes sistemas operacionais */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Destaque limpo para termos técnicos entre crases (`porta 22`, `NAT`) */
+code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875em;
+    background-color: #F1F5F9;
+    color: #0F172A;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    border: 1px solid #E2E8F0;
+}
+
+/* Indicador giratório discreto (sem brilho neon ou cores chamativas) */
+.spinner-editorial {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid #CBD5E1;
+    border-top-color: #1D4ED8;
+    border-radius: 9999px;
+    animation: girar 0.75s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes girar {
+    to {
+        transform: rotate(360deg);
+    }
+}

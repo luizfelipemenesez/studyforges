@@ -1,0 +1,151 @@
+
+<!--
+Arquivo: app/templates/quiz.html
+Papel no sistema: Tela focada de estudo e resolução do simulado.
+Recebe o 'caderno_id' do Flask via atributo data-caderno-id e deixa o quiz.js
+controlar a navegação entre questões, gabarito comentado e exportação Markdown.
+Comunica-se com: app/templates/base.html e app/static/js/quiz.js
+-->
+{% extends "base.html" %}
+
+{% block title %}StudyForge — Simulado{% endblock %}
+
+{% block content %}
+<!-- Container principal centralizado (max-w-3xl) para leitura confortável -->
+<div id="quiz-container" data-caderno-id="{{ caderno_id }}" class="max-w-3xl mx-auto">
+
+    <!-- Estado inicial de carregamento -->
+    <div id="quiz-loading" class="bg-white border border-slate-200 rounded-lg p-8 text-center">
+        <div class="spinner-editorial mx-auto mb-3"></div>
+        <p class="text-sm text-slate-600">Carregando questões do caderno...</p>
+    </div>
+
+    <!-- Cabeçalho do caderno e barra de progresso minimalista -->
+    <div id="quiz-header" class="hidden mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+                <span id="badge-materia" class="font-mono text-xs text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                    Matéria
+                </span>
+                <h1 id="titulo-caderno" class="text-lg font-semibold text-slate-900 mt-1.5">
+                    Título do Caderno
+                </h1>
+            </div>
+            <div class="text-left sm:text-right">
+                <span id="progresso-texto" class="font-mono text-xs text-slate-600">
+                    Questão 1 de 5
+                </span>
+            </div>
+        </div>
+
+        <!-- Barra de progresso fina -->
+        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div id="barra-progresso" class="h-full bg-blue-700 transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Cartão da questão atual -->
+    <article id="cartao-questao" class="hidden bg-white border border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs">
+        <!-- Metadados da questão -->
+        <div class="flex flex-wrap items-center gap-2 mb-4 text-xs">
+            <span id="q-tipo" class="font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                Múltipla Escolha
+            </span>
+            <span id="q-dificuldade" class="font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                Intermediário
+            </span>
+            <span id="q-topico" class="font-mono text-slate-500">
+                &middot; Tópico
+            </span>
+        </div>
+
+        <!-- Enunciado -->
+        <h2 id="q-enunciado" class="text-base sm:text-lg font-medium text-slate-900 leading-relaxed mb-6">
+            Enunciado da questão...
+        </h2>
+
+        <!-- Lista de alternativas (botões inseridos pelo quiz.js) -->
+        <div id="q-alternativas" class="space-y-2.5"></div>
+
+        <!-- Painel de gabarito comentado (aparece após confirmar resposta) -->
+        <div id="painel-explicacao" class="hidden mt-6 pt-5 border-t border-slate-200">
+            <div id="banner-resultado-questao" class="rounded-md px-3.5 py-2 text-sm font-medium mb-3"></div>
+
+            <div class="text-sm text-slate-700 leading-relaxed space-y-2">
+                <p class="font-semibold text-slate-900">Explicação detalhada:</p>
+                <p id="q-explicacao"></p>
+            </div>
+
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>Referência consultada:</span>
+                <span id="q-fonte"></span>
+            </div>
+        </div>
+
+        <!-- Barra inferior de ações e dica de atalhos -->
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+            <span class="hidden sm:inline font-mono text-xs text-slate-400">
+                Atalhos: teclas 1-4 para marcar &middot; Enter para confirmar
+            </span>
+
+            <div class="flex items-center gap-3 ml-auto">
+                <button type="button" id="btn-confirmar" disabled
+                    class="px-4 py-2 rounded-md bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    Confirmar Resposta
+                </button>
+
+                <button type="button" id="btn-proxima"
+                    class="hidden px-4 py-2 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition-colors">
+                    Próxima Questão
+                </button>
+            </div>
+        </div>
+    </article>
+
+    <!-- Tela de Relatório Final (aparece ao concluir todas as questões) -->
+    <section id="tela-relatorio" class="hidden bg-white border border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs">
+        <div class="border-b border-slate-200 pb-5 mb-6">
+            <span class="font-mono text-xs uppercase tracking-wider text-slate-500">
+                Simulado Concluído
+            </span>
+            <h2 class="text-2xl font-semibold text-slate-900 mt-1">
+                Desempenho: <span id="relatorio-percentual" class="text-blue-700">0%</span>
+            </h2>
+            <p id="relatorio-resumo" class="text-sm text-slate-600 mt-1">
+                Você acertou 0 de 0 questões.
+            </p>
+        </div>
+
+        <!-- Diagnóstico por tópico -->
+        <div class="mb-6">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">
+                Desempenho por Tópico
+            </h3>
+            <div id="relatorio-topicos" class="space-y-2"></div>
+        </div>
+
+        <!-- Ações finais -->
+        <div class="pt-4 border-t border-slate-200 flex flex-wrap items-center gap-3">
+            <button type="button" id="btn-exportar-md"
+                class="px-4 py-2 rounded-md bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium transition-colors">
+                Exportar Simulado (.md)
+            </button>
+
+            <button type="button" id="btn-refazer"
+                class="px-4 py-2 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-medium transition-colors">
+                Refazer Simulado
+            </button>
+
+            <a href="/"
+                class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 ml-auto">
+                Voltar aos Cadernos
+            </a>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+{% endblock %}
