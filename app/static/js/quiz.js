@@ -11,12 +11,17 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("quiz-container");
     const cadernoId = parseInt(container.getAttribute("data-caderno-id"), 10);
+    const modoGabarito = container.getAttribute("data-modo-gabarito") === "true";
 
     // Elementos de interface
     const loadingEl = document.getElementById("quiz-loading");
     const headerEl = document.getElementById("quiz-header");
     const cartaoQuestaoEl = document.getElementById("cartao-questao");
+    const telaGabaritoEl = document.getElementById("tela-gabarito");
     const telaRelatorioEl = document.getElementById("tela-relatorio");
+    const gabaritoDiretoEl = document.getElementById("gabarito-direto");
+    const gabaritoMateriaEl = document.getElementById("gabarito-materia");
+    const gabaritoTituloEl = document.getElementById("gabarito-titulo");
 
     const badgeMateriaEl = document.getElementById("badge-materia");
     const tituloCadernoEl = document.getElementById("titulo-caderno");
@@ -36,6 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const btnConfirmar = document.getElementById("btn-confirmar");
     const btnProxima = document.getElementById("btn-proxima");
+    const relatorioGabaritoEl = document.getElementById("relatorio-gabarito");
 
     // Estado interno do simulado em andamento
     let cadernoAtual = null;
@@ -67,6 +73,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         tituloCadernoEl.textContent = cadernoAtual.titulo;
 
         loadingEl.classList.add("hidden");
+
+        if (modoGabarito) {
+            gabaritoMateriaEl.textContent = cadernoAtual.materia_detectada;
+            gabaritoTituloEl.textContent = cadernoAtual.titulo;
+            historicoRespostas = questoes.map((questao) => ({
+                questao: questao,
+                escolhida: null,
+            }));
+            telaGabaritoEl.classList.remove("hidden");
+            renderizarGabarito(gabaritoDiretoEl);
+            return;
+        }
+
         headerEl.classList.remove("hidden");
         cartaoQuestaoEl.classList.remove("hidden");
 
@@ -289,12 +308,89 @@ document.addEventListener("DOMContentLoaded", async () => {
             })
             .join("");
 
+        renderizarGabarito(relatorioGabaritoEl);
+
         // Salva a tentativa no banco SQLite
         try {
             await StudyForgeAPI.salvarTentativa(cadernoId, acertos, total);
         } catch (erro) {
             console.error("Aviso ao salvar pontuação:", erro.message);
         }
+    }
+
+    /**
+     * Exibe as questões no elemento informado com alternativas, gabarito e explicação.
+     * @param {HTMLElement} conteinerGabarito - Elemento que receberá a lista de questões.
+     * @returns {void}
+     */
+    function renderizarGabarito(conteinerGabarito) {
+        const fragmento = document.createDocumentFragment();
+
+        historicoRespostas.forEach((item, indice) => {
+            const questao = item.questao;
+            const cartao = document.createElement("article");
+            cartao.className = "rounded-md border border-slate-200 bg-white p-4 sm:p-5";
+
+            const titulo = document.createElement("h4");
+            titulo.className = "font-mono text-xs font-medium text-slate-500 mb-2";
+            titulo.textContent = `Questão ${indice + 1} · ${questao.topico}`;
+            cartao.appendChild(titulo);
+
+            const enunciado = document.createElement("p");
+            enunciado.className = "text-sm font-medium leading-relaxed text-slate-900 mb-3";
+            enunciado.textContent = questao.enunciado;
+            cartao.appendChild(enunciado);
+
+            const alternativas = document.createElement("ol");
+            alternativas.className = "space-y-2";
+
+            questao.alternativas.forEach((texto, indiceAlternativa) => {
+                const alternativa = document.createElement("li");
+                const correta = indiceAlternativa === questao.resposta_correta;
+                const escolhida = indiceAlternativa === item.escolhida;
+                alternativa.className = correta
+                    ? "flex items-start gap-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-slate-900"
+                    : "flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700";
+
+                const letra = document.createElement("span");
+                letra.className = "font-mono font-semibold text-blue-700";
+                letra.textContent = `${String.fromCharCode(65 + indiceAlternativa)}.`;
+                alternativa.appendChild(letra);
+
+                const conteudo = document.createElement("span");
+                conteudo.className = "flex-1 leading-relaxed";
+                conteudo.textContent = texto;
+                alternativa.appendChild(conteudo);
+
+                if (correta) {
+                    const marcador = document.createElement("span");
+                    marcador.className = "font-mono text-xs font-medium text-blue-700";
+                    marcador.textContent = "Gabarito";
+                    alternativa.appendChild(marcador);
+                }
+
+                if (escolhida) {
+                    const marcador = document.createElement("span");
+                    marcador.className = "font-mono text-xs text-slate-500";
+                    marcador.textContent = "Sua resposta";
+                    alternativa.appendChild(marcador);
+                }
+
+                alternativas.appendChild(alternativa);
+            });
+
+            cartao.appendChild(alternativas);
+
+            const explicacao = document.createElement("p");
+            explicacao.className = "mt-3 border-t border-slate-100 pt-3 text-sm leading-relaxed text-slate-600";
+            explicacao.textContent = `Comentário: ${questao.explicacao_detalhada}`;
+            cartao.appendChild(explicacao);
+
+            fragmento.appendChild(cartao);
+        });
+
+        conteinerGabarito.textContent = "";
+        conteinerGabarito.appendChild(fragmento);
     }
 
     // Botão Refazer Simulado

@@ -30,4 +30,15 @@ def pagina_quiz(caderno_id: int):
     Parâmetros:
         caderno_id (int): ID do caderno recebido pela URL (ex.: /quiz/3).
     """
-    return render_template("quiz.html", caderno_id=caderno_id)
+    return render_template("quiz.html", caderno_id=caderno_id, modo_gabarito=False)
+
+
+@page_bp.route("/gabarito/<int:caderno_id>")
+def pagina_gabarito(caderno_id: int):
+    """
+    Renderiza o gabarito comentado de um caderno sem iniciar o simulado.
+
+    Parâmetros:
+        caderno_id (int): ID do caderno recebido pela URL.
+    """
+    return render_template("quiz.html", caderno_id=caderno_id, modo_gabarito=True)

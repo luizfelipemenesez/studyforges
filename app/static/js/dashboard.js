@@ -201,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     </span>
                                 </div>
 
-                                <a href="/quiz/${caderno.id}"
+                                <a href="/gabarito/${caderno.id}"
                                     class="text-xs font-medium text-blue-700 hover:text-blue-800">
                                     Estudar &rarr;
                                 </a>

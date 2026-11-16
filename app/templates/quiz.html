@@ -8,11 +8,12 @@ Comunica-se com: app/templates/base.html e app/static/js/quiz.js
 -->
 {% extends "base.html" %}
 
-{% block title %}StudyForge — Simulado{% endblock %}
+{% block title %}StudyForge — {{ "Gabarito" if modo_gabarito else "Simulado" }}{% endblock %}
 
 {% block content %}
 <!-- Container principal centralizado (max-w-3xl) para leitura confortável -->
-<div id="quiz-container" data-caderno-id="{{ caderno_id }}" class="max-w-3xl mx-auto">
+<div id="quiz-container" data-caderno-id="{{ caderno_id }}"
+    data-modo-gabarito="{{ 'true' if modo_gabarito else 'false' }}" class="max-w-3xl mx-auto">
 
     <!-- Estado inicial de carregamento -->
     <div id="quiz-loading" class="bg-white border border-slate-200 rounded-lg p-8 text-center">
@@ -102,6 +103,28 @@ Comunica-se com: app/templates/base.html e app/static/js/quiz.js
         </div>
     </article>
 
+    <!-- Gabarito acessado diretamente pela biblioteca de cadernos -->
+    <section id="tela-gabarito" class="hidden bg-white border border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs">
+        <div class="border-b border-slate-200 pb-5 mb-6">
+            <span id="gabarito-materia" class="font-mono text-xs text-blue-700"></span>
+            <h1 id="gabarito-titulo" class="text-2xl font-semibold text-slate-900 mt-1"></h1>
+            <p class="text-sm text-slate-600 mt-1">Gabarito comentado</p>
+        </div>
+
+        <div id="gabarito-direto" class="space-y-4"></div>
+
+        <div class="pt-4 mt-6 border-t border-slate-200 flex flex-wrap items-center gap-3">
+            <a href="/"
+                class="px-4 py-2 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-medium">
+                Voltar aos Cadernos
+            </a>
+            <a href="/quiz/{{ caderno_id }}"
+                class="px-4 py-2 rounded-md bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium">
+                Resolver Simulado
+            </a>
+        </div>
+    </section>
+
     <!-- Tela de Relatório Final (aparece ao concluir todas as questões) -->
     <section id="tela-relatorio" class="hidden bg-white border border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs">
         <div class="border-b border-slate-200 pb-5 mb-6">
@@ -122,6 +145,14 @@ Comunica-se com: app/templates/base.html e app/static/js/quiz.js
                 Desempenho por Tópico
             </h3>
             <div id="relatorio-topicos" class="space-y-2"></div>
+        </div>
+
+        <!-- Revisão de todas as questões com alternativas e respostas corretas -->
+        <div class="mb-6">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">
+                Gabarito comentado
+            </h3>
+            <div id="relatorio-gabarito" class="space-y-4"></div>
         </div>
 
         <!-- Ações finais -->
